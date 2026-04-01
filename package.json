@@ -1,0 +1,15 @@
+{
+  "name": "numinfo",
+  "version": "1.0.0",
+  "description": "Cloned API with 30-day key validation",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel deploy"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.x"
+  }
+}

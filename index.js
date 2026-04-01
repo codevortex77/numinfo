@@ -24,6 +24,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
+  res.setHeader('Content-Type', 'application/json');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -62,8 +63,25 @@ export default async function handler(req, res) {
     // Forward request to original API
     const originalUrl = `${API_TARGET}/?key=DARKOSINT&num=${mobile}`;
     
+    console.log('Fetching from:', originalUrl);
+    
     const response = await fetch(originalUrl);
-    const data = await response.json();
+    
+    // Check if response is OK
+    if (!response.ok) {
+      throw new Error(`Original API returned status: ${response.status}`);
+    }
+    
+    // Get response text first to check if it's valid JSON
+    const responseText = await response.text();
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse JSON. Response was:', responseText.substring(0, 500));
+      throw new Error('Original API returned invalid JSON response');
+    }
 
     // Modify the response
     if (data.success) {
@@ -77,14 +95,15 @@ export default async function handler(req, res) {
     }
 
     // Return modified response
-    return res.status(response.status).json(data);
+    return res.status(200).json(data);
     
   } catch (error) {
     console.error('Error fetching from target API:', error);
     return res.status(500).json({
       success: false,
       error: 'Failed to fetch data from the source API',
-      details: error.message
+      details: error.message,
+      hint: 'The original API might be down or changed. Please check the API endpoint.'
     });
   }
 }
